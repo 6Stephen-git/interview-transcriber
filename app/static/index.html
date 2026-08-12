@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>面经档案室</title>
+    <link rel="stylesheet" href="/static/style.css?v=3" />
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="rail">
+        <a class="wordmark" href="#queue" aria-label="面经档案室首页">
+          <span>面经</span><strong>档案室</strong>
+        </a>
+        <p class="rail-note">OBS 双轨录音<br />整理为可回看的面试档案</p>
+        <nav class="nav-list" aria-label="主导航">
+          <button class="nav-item is-active" data-view="queue">转录队列</button>
+          <button class="nav-item" data-view="records">面经记录</button>
+          <button class="nav-item" data-view="settings">本地设置</button>
+        </nav>
+        <div class="rail-footer">
+          <i></i><span id="health-label">正在连接本地服务</span>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="view-eyebrow">录音处理</p>
+            <h1 id="view-title">转录队列</h1>
+          </div>
+          <button class="button button-quiet" id="refresh-button">刷新</button>
+        </header>
+
+        <section class="view is-visible" id="queue-view">
+          <div class="import-layout">
+            <section class="card import-card">
+              <div class="card-heading">
+                <div>
+                  <p class="section-label">新建任务</p>
+                  <h2>选择 OBS 录制文件</h2>
+                </div>
+                <span class="format-note">MKV · MP4 · MOV</span>
+              </div>
+              <div class="model-grid" aria-label="本次任务模型设置">
+                <label>转录语言
+                  <select id="language-select">
+                    <option value="auto">自动识别（中/英文）</option>
+                    <option value="zh">中文</option>
+                    <option value="en">英文</option>
+                  </select>
+                </label>
+                <label>转录模型
+                  <select id="transcription-model">
+                    <option value="small">small</option>
+                    <option value="medium">medium</option>
+                    <option value="large-v3">large-v3</option>
+                  </select>
+                </label>
+                <label>整理方式
+                  <select id="semantic-provider">
+                    <option value="ollama">本地 Ollama</option>
+                    <option value="openai">OpenAI 兼容 API</option>
+                  </select>
+                </label>
+                <label>整理模型
+                  <select id="semantic-model">
+                    <option value="deepseek-v4-flash">deepseek-v4-flash</option>
+                    <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+                    <option value="qwen2.5:3b">qwen2.5:3b</option>
+                  </select>
+                </label>
+              </div>
+              <div class="import-actions">
+                <button class="button button-primary" id="scan-button">扫描录制目录</button>
+                <label class="button button-quiet file-picker">选择文件
+                  <input id="file-input" type="file" accept=".mkv,.mp4,.mov,.flv,.ts" multiple />
+                </label>
+              </div>
+              <div class="drop-zone" id="drop-zone" tabindex="0">
+                <strong>拖拽 OBS 录制文件到这里</strong>
+                <span>文件会复制到本地应用数据目录</span>
+              </div>
+              <div id="scan-results" class="scan-results" aria-live="polite"></div>
+            </section>
+
+            <section class="card queue-summary">
+              <p class="section-label">处理规则</p>
+              <h2>每段录音都有一条<br />可恢复的处理轨迹</h2>
+              <ol class="processing-track">
+                <li><b>01</b><span>提取“我 / 面试官”双音轨</span></li>
+                <li><b>02</b><span>使用所选模型转录</span></li>
+                <li><b>03</b><span>按问题与话题整理成文档</span></li>
+              </ol>
+              <p class="muted">失败任务将保留已完成产物，可从失败阶段继续。</p>
+            </section>
+          </div>
+
+          <section class="card task-card">
+            <div class="card-heading">
+              <div>
+                <p class="section-label">任务状态</p>
+                <h2>进行中的档案</h2>
+              </div>
+              <span id="task-count" class="count-badge">0 项</span>
+            </div>
+            <div id="task-list" class="task-list">
+              <p class="empty-state">还没有任务。选择或拖入一段 OBS 录制文件开始。</p>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="records-view">
+          <section class="card records-card">
+            <div class="card-heading">
+              <div>
+                <p class="section-label">内容头检索</p>
+                <h2>面经记录</h2>
+              </div>
+              <label class="search-field">
+                <span>匹配内容头</span>
+                <input id="record-search" placeholder="输入你写在内容头中的关键词" />
+              </label>
+            </div>
+            <div id="record-list" class="record-list"></div>
+          </section>
+        </section>
+
+        <section class="view" id="settings-view">
+          <form class="card settings-card" id="settings-form">
+            <div class="card-heading">
+              <div>
+                <p class="section-label">仅保存在此电脑</p>
+                <h2>本地设置</h2>
+              </div>
+            </div>
+            <div class="settings-grid">
+              <label class="wide">OBS 录制目录
+                <input id="recording-directory" placeholder="例如 D:\OBS Recordings" />
+              </label>
+              <label>本地模型并发数
+                <input id="local-concurrency" type="number" min="1" max="4" />
+              </label>
+              <label>API 整理并发数
+                <input id="api-concurrency" type="number" min="1" max="16" />
+              </label>
+              <label>可选转录模型
+                <textarea id="transcription-models" rows="4" placeholder="每行一个模型，例如 small"></textarea>
+                <span class="field-hint">每行一个；保存后会显示在新建任务的下拉列表中。</span>
+              </label>
+              <label>可选整理模型
+                <textarea id="semantic-models" rows="4" placeholder="每行一个模型，例如 deepseek-v4-flash"></textarea>
+                <span class="field-hint">每行一个；保存后会显示在新建任务的下拉列表中。</span>
+              </label>
+              <label class="wide">Ollama 地址
+                <input id="ollama-url" placeholder="http://127.0.0.1:11434" />
+              </label>
+              <label class="wide">OpenAI 兼容 API 地址
+                <input id="openai-base-url" placeholder="https://api.openai.com/v1" />
+              </label>
+              <label class="wide">OpenAI 兼容 API 密钥
+                <input id="openai-api-key" type="password" autocomplete="new-password" />
+              </label>
+            </div>
+            <div class="form-footer">
+              <p class="muted">更改并发数后请重启应用，使新的 worker 上限生效。</p>
+              <button class="button button-primary" type="submit">保存本地设置</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="view" id="record-view">
+          <div class="document-topline">
+            <button class="button button-quiet" id="back-to-records">返回记录</button>
+            <span id="document-source" class="muted"></span>
+          </div>
+          <form id="record-form" class="document-editor">
+            <div class="editor-bar">
+              <div>
+                <p class="section-label">面经内容</p>
+                <p class="muted">直接在文档中编辑，保存后会同步更新。</p>
+              </div>
+              <div class="editor-actions">
+                <button class="button button-quiet" type="button" id="download-record-button">下载面经</button>
+                <button class="button button-quiet" type="button" id="export-outline-button">导出问题清单</button>
+                <button class="button button-danger" type="button" id="delete-record-button">删除面经</button>
+                <button class="button button-primary" type="submit">保存文档</button>
+              </div>
+            </div>
+            <div class="document-layout" id="document-layout">
+              <aside class="question-sidebar" id="question-sidebar" hidden>
+                <div class="question-sidebar-head">
+                  <p class="section-label">问题目录</p>
+                  <button class="button button-quiet small-button" type="button" id="question-sidebar-top">回到顶部</button>
+                </div>
+                <nav id="question-nav" class="question-nav" aria-label="问题跳转"></nav>
+              </aside>
+              <section class="document-main">
+                <section class="document-body">
+                  <p class="section-label">可检索内容头</p>
+                  <textarea id="content-header" rows="4" placeholder="写下这篇面经的任意标识信息，例如公司、岗位、轮次或你的备注。"></textarea>
+                  <div class="editor-rule"></div>
+                  <article id="document-content" class="document-content" contenteditable="true" spellcheck="true" aria-label="面经正文"></article>
+                </section>
+              </section>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/static/app.js?v=3"></script>
+  </body>
+</html>

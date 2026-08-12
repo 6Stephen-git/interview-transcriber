@@ -1,0 +1,37 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.env
+
+# Recordings & Transcripts
+# These are the output of the script, not part of the source code.
+recordings/
+data/
+*.mkv
+*.wav
+*.srt
+*.txt
+
+# State files
+.pending_meeting
+processing_queue.csv
+*.bak
+
+# Planning & tooling
+.planning/
+.claude/
+
+# Logs
+logs/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Evaluation harness cache (downloaded AMI audio/references — large, not source)
+.eval_cache/

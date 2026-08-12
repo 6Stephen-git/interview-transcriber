@@ -16,6 +16,7 @@ data/
 *.wav
 *.srt
 *.txt
+!requirements-windows.txt
 
 # State files
 .pending_meeting
